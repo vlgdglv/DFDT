@@ -13,9 +13,8 @@ from data import ST4Dataset
 train_csv_path = './data/train_sample.csv'
 test_csv_path = './data/test_sample.csv'
 val_csv_path = './data/val_sample.csv'
-log_path = "./data/ST4000/preprocessed/"
+# log_path = "./data/ST4000/preprocessed/"
 THRESHOLD = 0.8
-
 
 class Solver:
     def __init__(self,

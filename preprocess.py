@@ -73,7 +73,6 @@ def plotfailure(df):
 
 
 
-
 def processSerials(df):
     serials = df["serial_number"].value_counts()
     total = len(serials)
