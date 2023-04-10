@@ -89,6 +89,7 @@ def process_all_mt(log_root_path, target_path, pool_size=4):
 
 
 def merge_months_logs(src_path, target_path):
+    check_dir(target_path)
     seen_flgs = np.zeros(250000, dtype=np.uint8)
     logger.log("Starting to merge all month logs")
     total_logs = 0
@@ -101,7 +102,7 @@ def merge_months_logs(src_path, target_path):
             df = pd.read_csv(disk_csv_path)
             total_logs += len(df)
             disk_name = disk_csv_name.split(".")[0]
-            disk_id = disk_name.split("_")[1]
+            disk_id = int(disk_name.split("_")[1])
             target_csv_path = os.path.join(target_path, disk_csv_name)
             if seen_flgs[disk_id] == 0:
                 seen_flgs[disk_id] = 1
@@ -114,7 +115,32 @@ def merge_months_logs(src_path, target_path):
                .format(total_logs, time.time() - start_time))
 
 
+def extract_log_info(fault_tag_path, log_path):
+    fault_tag_df = pd.read_csv(fault_tag_path)
+    fault_tag_df["fault_time"] = pd.to_datetime(fault_tag_df["fault_time"], format="%Y-%m-%d").dt.strftime("%Y%m%d")
+    print(fault_tag_df.head())
+
+    log_list = [x.split(".")[0] for x in os.listdir(log_path)]
+    fault_list = [1 if fault_tag_df["serial_number"].isin([x]).any() else 0 for x in log_list]
+
+    # if treat as multi-class classification, use below statement
+    # just change fault label from [0, 1] to [0, ...n] (n denote categories of faults)
+    # fault_list = [int(fault_tag_df[fault_tag_df["serial_number"] == x]["tag"].values[0]) + 1
+    #               if fault_tag_df["serial_number"].isin([x]).any() else 0 for x in log_list]
+
+    date_list = [fault_tag_df[fault_tag_df["serial_number"] == x]["fault_time"].values[0]
+                 if fault_tag_df["serial_number"].isin([x]).any() else '0' for x in log_list]
+
+    df = pd.DataFrame({
+        "serial_number": log_list,
+        "fault": fault_list,
+        "fault_date": date_list,
+    })
+    df.to_csv("data/disk_info.csv", index=False)
+
+
 if __name__ == "__main__":
 
     # process_all_mt(log_root_path="data/smartlog_data/", target_path="data/processed_mt/")
-    merge_months_logs(src_path="data/processed_mt", target_path="data/preprocessed")
+    # merge_months_logs(src_path="data/processed_mt", target_path="data/preprocessed")
+    extract_log_info(fault_tag_path="data/fault_tag_data.csv", log_path="data/preprocessed")

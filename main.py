@@ -8,13 +8,14 @@ from torch.utils.data import DataLoader
 from torch import nn, tensor, Tensor
 # from torch.utils.tensorboard import SummaryWriter
 from model import TC, FocalLoss
-from data import ST4Dataset
+from data import DiskDataset
 
 train_csv_path = './data/train_sample.csv'
 test_csv_path = './data/test_sample.csv'
 val_csv_path = './data/val_sample.csv'
-# log_path = "./data/ST4000/preprocessed/"
+disk_data_path = "data/preprocessed/"
 THRESHOLD = 0.8
+
 
 class Solver:
     def __init__(self,
@@ -180,12 +181,12 @@ class Solver:
 
 if __name__ == "__main__":
     epochs = 1000
-    bs = 32
-    lr = 1e-4
+    bs = 1
+    lr = 1e-3
 
-    st4_train_dataset = ST4Dataset(train_csv_path, log_path)
-    st4_test_dataset = ST4Dataset(test_csv_path, log_path)
-    st4_val_dataset = ST4Dataset(val_csv_path, log_path)
+    disk_train_dataset = DiskDataset(train_csv_path, disk_data_path)
+    disk_test_dataset = DiskDataset(test_csv_path, disk_data_path)
+    disk_val_dataset = DiskDataset(val_csv_path, disk_data_path)
     grad_acc_step = 1
     transformer_classifer = TC(
         d_model=12,
@@ -202,9 +203,9 @@ if __name__ == "__main__":
         epochs=epochs,
         batch_size=bs,
         lr=lr,
-        train_dataloader=DataLoader(st4_train_dataset, batch_size=bs, shuffle=True),
-        test_dataloader=DataLoader(st4_test_dataset, batch_size=bs, shuffle=True),
-        val_dataloader=DataLoader(st4_val_dataset, batch_size=bs, shuffle=True),
+        train_dataloader=DataLoader(disk_train_dataset, batch_size=bs, shuffle=False),
+        test_dataloader=DataLoader(disk_test_dataset, batch_size=bs, shuffle=True),
+        val_dataloader=DataLoader(disk_val_dataset, batch_size=bs, shuffle=True),
         model=transformer_classifer,
         optimizer=Adam,
         criterion=FCLL,
@@ -212,8 +213,8 @@ if __name__ == "__main__":
         # use_wandb=True,
         do_val=True,
         grad_acc_step=grad_acc_step,
-        # save=True,
-        log_inter=1000
+        save=True,
+        log_inter=int(epochs/10)
     )
 
     solver.train()

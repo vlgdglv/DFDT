@@ -16,14 +16,3 @@ class Logger:
         if self.stdout:
             print(log_str, end="")
 
-
-class MultiProcPool:
-    def __init__(self):
-        pass
-
-
-
-if __name__ == "__main__":
-    logger = Logger("test.log")
-    logger.log("nmsl")
-
